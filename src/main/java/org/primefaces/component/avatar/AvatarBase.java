@@ -37,7 +37,9 @@ public abstract class AvatarBase extends UIComponentBase {
         size,
         shape,
         style,
-        styleClass
+        styleClass,
+        gravatar,
+        gravatarConfig
     }
 
     public AvatarBase() {
@@ -95,6 +97,22 @@ public abstract class AvatarBase extends UIComponentBase {
 
     public void setStyleClass(String styleClass) {
         getStateHelper().put(PropertyKeys.styleClass, styleClass);
+    }
+
+    public String getGravatar() {
+        return (String) getStateHelper().eval(AvatarBase.PropertyKeys.gravatar, null);
+    }
+
+    public void setGravatar(String gravatar) {
+        getStateHelper().put(AvatarBase.PropertyKeys.gravatar, gravatar);
+    }
+
+    public String getGravatarConfig() {
+        return (String) getStateHelper().eval(AvatarBase.PropertyKeys.gravatarConfig, null);
+    }
+
+    public void setGravatarConfig(String gravatarConfig) {
+        getStateHelper().put(AvatarBase.PropertyKeys.gravatarConfig, gravatarConfig);
     }
 
 }

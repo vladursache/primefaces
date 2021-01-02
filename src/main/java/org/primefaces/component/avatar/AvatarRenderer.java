@@ -24,14 +24,21 @@
 package org.primefaces.component.avatar;
 
 import org.primefaces.renderkit.CoreRenderer;
+import org.primefaces.util.LangUtils;
 
+import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class AvatarRenderer extends CoreRenderer {
+
+    private static final String GRAVATAR_URL = "http://www.gravatar.com/avatar/";
 
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
@@ -81,6 +88,11 @@ public class AvatarRenderer extends CoreRenderer {
             writer.writeAttribute("class", iconStyleClass, "styleClass");
             writer.endElement("span");
         }
+        else  if (avatar.getGravatar() != null) {
+            writer.startElement("img", null);
+            writer.writeAttribute("src", generateGravatar(avatar), "src");
+            writer.endElement("img");
+        }
     }
 
     @Override
@@ -91,5 +103,49 @@ public class AvatarRenderer extends CoreRenderer {
     @Override
     public boolean getRendersChildren() {
         return true;
+    }
+
+    /**
+     * Generate a Gravatar URL for an email addressed based on API docs.
+     *
+     * @see https://en.gravatar.com/site/implement/images/
+     * @param avatar the Avatar to create a Gravatar for
+     * @return the URL to retrieve the Gravatar image
+     */
+    protected String generateGravatar(Avatar avatar) {
+        String email = avatar.getGravatar();
+        String config = avatar.getGravatarConfig();
+        String url = null;
+        try {
+            final StringBuilder sb = new StringBuilder(1024);
+            sb.append(GRAVATAR_URL);
+            sb.append(generateMailHash(email));
+            if (LangUtils.isNotBlank(config)) {
+                sb.append('?').append(config);
+            }
+            url = sb.toString();
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new FacesException("Failed to generate Gravatar URL for value: " + email);
+        }
+        return url.toString();
+    }
+
+    /**
+     * Converts email address into a hash code for Gravatar API.
+     *
+     * @param email the email to encode
+     * @return a MD5 hashcode of the email address
+     * @throws NoSuchAlgorithmException if hash can't be encoded
+     */
+    protected String generateMailHash(String email) throws NoSuchAlgorithmException {
+        final MessageDigest md = MessageDigest.getInstance("MD5"); // NOSONAR
+        md.update(email.getBytes(StandardCharsets.UTF_8));
+        final byte[] digest = md.digest();
+        final StringBuilder sb = new StringBuilder(1024);
+        for (final byte b : digest) {
+            sb.append(String.format("%02x", b & 0xff));
+        }
+        return sb.toString();
     }
 }
